@@ -1,0 +1,112 @@
+# -*- coding: utf-8 -*-
+"""
+@author: robertivtcd
+"""
+import numpy
+from numpy import *
+import random
+    
+######################################################################################
+# Initialise Variables
+######################################################################################
+
+#possible coordinates
+ROWCOLUMNS = [0,1,2,3]
+
+#possible numbers to be added to game
+NUMBERS = [2,4]
+
+#board 
+board = array([[0,0,0,0],[0,0,0,0],
+   [0,0,0,0],[0,0,0,0]])
+
+#score initialisation
+total_score = 0
+
+#######################################################################################
+# Functions
+#######################################################################################
+
+#insert new number to matrix
+def random_insert(board):  #puts a new number onto the board 
+    fits = False
+    while fits == False:
+        identify_cell = array([random.choice(ROWCOLUMNS), random.choice(ROWCOLUMNS)])
+        if board[identify_cell[0], identify_cell[1]] == 0:
+            board[identify_cell[0], identify_cell[1]] = random.choice(NUMBERS)
+            fits = True
+          
+def initiate(): #starts the game with two random inserts           
+    #insert two numbers to initiate the game
+    for i in range(2):
+        random_insert(board)
+
+def stack(board): # stacking function
+    for column in ROWCOLUMNS[::-1]:         
+        for repeat in range(2): #loop twice to scan twice
+            for row in ROWCOLUMNS[::-1][:3][::-1]: #remove zeros and stack everything down
+                if board[row, column] == 0:
+                    board[row, column] = board[row -1, column]
+                    board[row -1, column] = 0
+
+def movement(board, rotations): #stacks board, doubles, zeros a cell, stacks again, repeat
+    current_score = 0
+    if valid_move(board) == True:
+        stack(board)
+        for column in ROWCOLUMNS[::-1]:        
+            for row in ROWCOLUMNS[::-1][:3]: #doubling function
+                if board[row, column] == board[row -1, column]:
+                    board[row, column] += board[row, column] #doubles value
+                    current_score += board[row, column]*2 #update scoreboard 
+                    board[row -1, column] = 0
+                    stack(board)
+        random_insert(board)
+    board = numpy.rot90(board, k=rotations) #rotates board back to starting position
+    print(board)
+    return current_score
+             
+                
+def valid_move(board): #move must be valid if there is (1) an empty space below a number, (2) a possible stackable number
+    valid_move = False
+    for column in ROWCOLUMNS[::-1]:        
+        for row in ROWCOLUMNS[:3]:
+            if (board[row, column] != 0 and board[row +1, column] == 0) or (board[row, column] != 0 and board[row +1, column] == board[row, column]):
+                valid_move = True
+    if valid_move == False:
+        print("Invalid Move")
+    return valid_move
+
+def game_over(board): #game over condition
+    game_over = False
+    if 0 not in board and valid_move(board) == False:
+        game_over = True
+    return game_over
+
+def play(): ################################################# can we make this a for loop?
+    initiate()
+    print(board)
+    score = 0
+    while game_over(board) == False:
+        move = input("What Direction? WASD?")
+        if move not in ("w", "a", "s", "d"):
+            print("Please use WASD directions!")
+        if move == "s": #down
+            current_score = movement(board, 0)
+        if move == "w": #up
+            updated_board = numpy.rot90(board, k=2)
+            current_score = movement(updated_board, 2 )
+        if move == "a": #left
+            updated_board = numpy.rot90(board, k=1)
+            current_score = movement(updated_board, 3 )
+        if move == "d": #right
+            updated_board = numpy.rot90(board, k=3)
+            current_score = movement(updated_board, 1 )
+        score += current_score            
+    if game_over(board) == True:
+        print("\n Game Over! \nTotal Score: ", score)    
+                 
+############################################################################################
+# PLAY
+############################################################################################
+
+play()
