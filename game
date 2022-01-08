@@ -1,9 +1,18 @@
 # -*- coding: utf-8 -*-
 """
+Created on Mon Dec 27 15:06:21 2021
+
 @author: robertivtcd
 """
-import numpy
+
+######################################################################################
+# Import Libraries
+######################################################################################
+
+
+import pygame, sys
 from numpy import *
+import numpy
 import random
     
 ######################################################################################
@@ -14,7 +23,7 @@ import random
 ROWCOLUMNS = [0,1,2,3]
 
 #possible numbers to be added to game
-NUMBERS = [2,4]
+NUMBERS = [2,2,2,2,2,2,2,2,2,4] #one in ten chance of a 4 being selected
 
 #board 
 board = array([[0,0,0,0],[0,0,0,0],
@@ -40,30 +49,31 @@ def initiate(): #starts the game with two random inserts
     #insert two numbers to initiate the game
     for i in range(2):
         random_insert(board)
+    numbers_on_board(board, font)
+    
 
 def stack(board): # stacking function
     for column in ROWCOLUMNS[::-1]:         
-        for repeat in range(2): #loop twice to scan twice
+        for repeat in range(3): #loop twice to scan twice
             for row in ROWCOLUMNS[::-1][:3][::-1]: #remove zeros and stack everything down
                 if board[row, column] == 0:
                     board[row, column] = board[row -1, column]
                     board[row -1, column] = 0
 
 def movement(board, rotations): #stacks board, doubles, zeros a cell, stacks again, repeat
-    current_score = 0
+    score = 0
     if valid_move(board) == True:
         stack(board)
         for column in ROWCOLUMNS[::-1]:        
             for row in ROWCOLUMNS[::-1][:3]: #doubling function
                 if board[row, column] == board[row -1, column]:
                     board[row, column] += board[row, column] #doubles value
-                    current_score += board[row, column]*2 #update scoreboard 
+                    score += board[row, column] #update scoreboard 
                     board[row -1, column] = 0
                     stack(board)
         random_insert(board)
     board = numpy.rot90(board, k=rotations) #rotates board back to starting position
-    print(board)
-    return current_score
+    return score
              
                 
 def valid_move(board): #move must be valid if there is (1) an empty space below a number, (2) a possible stackable number
@@ -73,40 +83,189 @@ def valid_move(board): #move must be valid if there is (1) an empty space below 
             if (board[row, column] != 0 and board[row +1, column] == 0) or (board[row, column] != 0 and board[row +1, column] == board[row, column]):
                 valid_move = True
     if valid_move == False:
-        print("Invalid Move")
+        pass
     return valid_move
 
-def game_over(board): #game over condition
+def game_over(board): #game over condition 
     game_over = False
-    if 0 not in board and valid_move(board) == False:
+    #considers valid moves across the four possible directions
+    if 0 not in board and valid_move(board) == False and valid_move(numpy.rot90(board, k=2)) == False and valid_move(numpy.rot90(board, k=1)) == False and valid_move(numpy.rot90(board, k=3)) == False:
         game_over = True
     return game_over
 
-def play(): ################################################# can we make this a for loop?
-    initiate()
-    print(board)
-    score = 0
-    while game_over(board) == False:
-        move = input("What Direction? WASD?")
-        if move not in ("w", "a", "s", "d"):
-            print("Please use WASD directions!")
+
+
+def play(board, move): 
+    current_score = 0
+    if game_over(board) == False:
+        #move = player_input
         if move == "s": #down
             current_score = movement(board, 0)
-        if move == "w": #up
+        elif move == "w": #up
             updated_board = numpy.rot90(board, k=2)
             current_score = movement(updated_board, 2 )
-        if move == "a": #left
+        elif move == "a": #left
             updated_board = numpy.rot90(board, k=1)
             current_score = movement(updated_board, 3 )
-        if move == "d": #right
+        elif move == "d": #right
             updated_board = numpy.rot90(board, k=3)
             current_score = movement(updated_board, 1 )
-        score += current_score            
+        else:
+            current_score = 0
+        return current_score
     if game_over(board) == True:
-        print("\n Game Over! \nTotal Score: ", score)    
-                 
-############################################################################################
-# PLAY
-############################################################################################
+        pass   #need to make this do something 
+    
+    return current_score
 
-play()
+
+#################################################################################################
+# PYGAME
+# INTEGRATION
+################################################################################################                                                  
+
+pygame.init()
+    
+WIDTH = 800
+HEIGHT = 985
+LINE_WIDTH = 30
+
+# colours
+LINE_COLOUR = (161, 147, 130)
+BG_COLOUR = (204, 192, 179)
+ORANGE = (237, 175, 109)
+WHITE = (242, 219, 191)
+CREAM = (230, 198, 161)
+DARK_ORANGE = (247, 159, 96)
+RED = (252, 103, 53)
+RED_MEDIUM = (224, 75, 25)
+RED_DARK = (232, 16, 16)
+YELLOW = (255, 251, 135)
+YELLOW_LOW = (247, 242, 92)
+YELLOW_MEDIUM = (255, 249, 69)
+YELLOW_MEDIUM_MEDIUM = (255, 248, 38)
+YELLOW_HIGH = (255, 247, 0)
+GREY = (212, 207, 201)
+
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("2048")
+screen.fill(BG_COLOUR)
+
+#structure the board
+def draw_lines():
+    #horizontal
+    pygame.draw.line(screen, LINE_COLOUR, (0,0), (800,0), LINE_WIDTH)
+    pygame.draw.line(screen, LINE_COLOUR, (0,200), (800,200), LINE_WIDTH)
+    pygame.draw.line(screen, LINE_COLOUR, (0,400), (800,400), LINE_WIDTH)
+    pygame.draw.line(screen, LINE_COLOUR, (0,600), (800,600), LINE_WIDTH)
+    pygame.draw.line(screen, LINE_COLOUR, (0,800), (800,800), LINE_WIDTH)
+    #down lines
+    pygame.draw.line(screen, LINE_COLOUR, (0,0), (0,800), LINE_WIDTH)
+    pygame.draw.line(screen, LINE_COLOUR, (200,0), (200,800), LINE_WIDTH)
+    pygame.draw.line(screen, LINE_COLOUR, (400,0), (400,800), LINE_WIDTH)
+    pygame.draw.line(screen, LINE_COLOUR, (600,0), (600,800), LINE_WIDTH)
+    pygame.draw.line(screen, LINE_COLOUR, (800,0), (800,800), LINE_WIDTH)
+
+#font
+font = pygame.font.SysFont('calibri', 40, bold=True)
+
+#draw score tile
+def display_score(score):
+    pygame.draw.rect(screen, GREY, (16, 850, 300, 100 ))
+    score_text = "Score: " + str(score)
+    text_surface = font.render((score_text), True, (0, 0, 0))
+    text_rect = text_surface.get_rect(center=(168, 900))
+    screen.blit(text_surface, (text_rect))
+
+
+def display_game_over():
+    pygame.draw.rect(screen, GREY, (250, 250, 300, 300 ))
+    text_surface = font.render(("Game Over"), True, (0, 0, 0))
+    text_rect = text_surface.get_rect(center=(400, 400))
+    screen.blit(text_surface, (text_rect))
+
+#display tiles with number
+def display_tiles(board, colour, row_counter, column_counter, row, column):
+    pygame.draw.rect(screen, colour, (16+(200*row_counter), 16+(200*column_counter), 170, 170))
+    if board[row, column] != 0:
+        text_surface = font.render(str(board[row, column]), True, (0, 0, 0))
+        text_rect = text_surface.get_rect(center=(100+(200*row_counter), 100+(200*column_counter)))
+        screen.blit(text_surface, (text_rect))
+
+# print the text onto their tiles
+def numbers_on_board(board, font):
+    column_counter = 0
+    for row in ROWCOLUMNS: #iterate through columns      
+        row_counter = 0
+        for column in ROWCOLUMNS: #iterate through rows
+            if board[row, column] == 0:
+                display_tiles(board, BG_COLOUR, row_counter, column_counter, row, column)
+            elif board[row, column] == 2:
+                display_tiles(board, WHITE, row_counter, column_counter, row, column)
+            elif board[row, column] == 4:
+                display_tiles(board, CREAM, row_counter, column_counter, row, column)
+            elif board[row, column] == 8:
+                display_tiles(board, ORANGE, row_counter, column_counter, row, column)
+            elif board[row, column] == 16:
+                display_tiles(board, DARK_ORANGE, row_counter, column_counter, row, column)
+            elif board[row, column] == 32:
+                display_tiles(board, RED, row_counter, column_counter, row, column)
+            elif board[row, column] == 64:
+                display_tiles(board, RED_MEDIUM, row_counter, column_counter, row, column)
+            elif board[row, column] == 128:
+                display_tiles(board, YELLOW, row_counter, column_counter, row, column)
+            elif board[row, column] == 256:
+                display_tiles(board, YELLOW_LOW, row_counter, column_counter, row, column)
+            elif board[row, column] == 512:
+                display_tiles(board, YELLOW_MEDIUM, row_counter, column_counter, row, column)
+            elif board[row, column] == 1024:
+                display_tiles(board, YELLOW_MEDIUM_MEDIUM, row_counter, column_counter, row, column)
+            elif board[row, column] == 2048:
+                display_tiles(board, YELLOW_HIGH, row_counter, column_counter, row, column)
+            else:
+                display_tiles(board, RED_DARK, row_counter, column_counter, row, column)
+            row_counter += 1
+        column_counter += 1
+        
+
+##############################################################################################     
+# Main Loop
+##############################################################################################
+
+
+def main():
+    draw_lines()
+    initiate()
+    total_score = 0
+    running = True
+    while running == True:
+        numbers_on_board(board, font)
+        pygame.display.update()
+        for event in pygame.event.get():
+            pressed_keys = pygame.key.get_pressed()
+            if event.type == pygame.QUIT:
+                sys.exit()
+            elif game_over(board) == True:
+                display_game_over()
+                pygame.display.update()
+                running = False
+            elif pressed_keys[pygame.K_LEFT]:
+                current_score = play(board, "a" )
+            elif pressed_keys[pygame.K_RIGHT]:
+                current_score = play(board, "d" )
+            elif pressed_keys[pygame.K_UP]:
+                current_score = play(board, "w" )
+            elif pressed_keys[pygame.K_DOWN]:
+                current_score = play(board, "s" )
+            else:
+                current_score = 0
+            
+            if running == True:
+                total_score += current_score
+                numbers_on_board(board, font)
+                display_score(total_score)
+                pygame.display.update()    
+    pygame.quit()
+ 
+main()       
+       
