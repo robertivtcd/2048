@@ -94,7 +94,6 @@ def game_over(board): #game over condition
     return game_over
 
 
-
 def play(board, move): 
     current_score = 0
     if game_over(board) == False:
@@ -130,26 +129,21 @@ WIDTH = 800
 HEIGHT = 985
 LINE_WIDTH = 30
 
-# colours
+# colours for each tile number
+COLOURS = {0: (204, 192, 179), 2: (242, 219, 191),
+           4: (230, 198, 161), 8: (237, 175, 109),
+           16: (247, 159, 96), 32: (252, 103, 53),
+           64: (224, 75, 25), 128: (255, 251, 135), 
+           256: (247, 242, 92), 512: (255, 249, 69), 
+           1024: (255, 248, 38), 2048: (255, 247, 0),}
+
 LINE_COLOUR = (161, 147, 130)
-BG_COLOUR = (204, 192, 179)
-ORANGE = (237, 175, 109)
-WHITE = (242, 219, 191)
-CREAM = (230, 198, 161)
-DARK_ORANGE = (247, 159, 96)
-RED = (252, 103, 53)
-RED_MEDIUM = (224, 75, 25)
-RED_DARK = (232, 16, 16)
-YELLOW = (255, 251, 135)
-YELLOW_LOW = (247, 242, 92)
-YELLOW_MEDIUM = (255, 249, 69)
-YELLOW_MEDIUM_MEDIUM = (255, 248, 38)
-YELLOW_HIGH = (255, 247, 0)
 GREY = (212, 207, 201)
+RED_DARK = (232, 16, 16)
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("2048")
-screen.fill(BG_COLOUR)
+screen.fill(COLOURS[0])
 
 #structure the board
 def draw_lines():
@@ -198,32 +192,10 @@ def numbers_on_board(board, font):
     for row in ROWCOLUMNS: #iterate through columns      
         row_counter = 0
         for column in ROWCOLUMNS: #iterate through rows
-            if board[row, column] == 0:
-                display_tiles(board, BG_COLOUR, row_counter, column_counter, row, column)
-            elif board[row, column] == 2:
-                display_tiles(board, WHITE, row_counter, column_counter, row, column)
-            elif board[row, column] == 4:
-                display_tiles(board, CREAM, row_counter, column_counter, row, column)
-            elif board[row, column] == 8:
-                display_tiles(board, ORANGE, row_counter, column_counter, row, column)
-            elif board[row, column] == 16:
-                display_tiles(board, DARK_ORANGE, row_counter, column_counter, row, column)
-            elif board[row, column] == 32:
-                display_tiles(board, RED, row_counter, column_counter, row, column)
-            elif board[row, column] == 64:
-                display_tiles(board, RED_MEDIUM, row_counter, column_counter, row, column)
-            elif board[row, column] == 128:
-                display_tiles(board, YELLOW, row_counter, column_counter, row, column)
-            elif board[row, column] == 256:
-                display_tiles(board, YELLOW_LOW, row_counter, column_counter, row, column)
-            elif board[row, column] == 512:
-                display_tiles(board, YELLOW_MEDIUM, row_counter, column_counter, row, column)
-            elif board[row, column] == 1024:
-                display_tiles(board, YELLOW_MEDIUM_MEDIUM, row_counter, column_counter, row, column)
-            elif board[row, column] == 2048:
-                display_tiles(board, YELLOW_HIGH, row_counter, column_counter, row, column)
+            if board[row, column] in COLOURS:
+                display_tiles(board, COLOURS[board[row, column]], row_counter, column_counter, row, column)
             else:
-                display_tiles(board, RED_DARK, row_counter, column_counter, row, column)
+                display_tiles(board, RED_DARK, row_counter, column_counter, row, column) #all values greater than 2048
             row_counter += 1
         column_counter += 1
         
@@ -260,7 +232,7 @@ def main():
             else:
                 current_score = 0
             
-            if running == True:
+            if running == True: 
                 total_score += current_score
                 numbers_on_board(board, font)
                 display_score(total_score)
